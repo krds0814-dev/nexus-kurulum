@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "product": "NEXUS installer entry",
+  "source_repository": "krds0814-dev/NEXUS_AI",
+  "source_path": "tools/github_entry.ps1",
+  "sha256": "9110d34a6b303e747547c3588cb98813d17e16dfb5e11c85f3f5e265b1224121",
+  "bytes": 8357
+}
