@@ -1,0 +1,11 @@
+{
+  "product": "GitHub CLI",
+  "version": "2.103.3",
+  "architecture": "windows-amd64",
+  "license": "MIT",
+  "upstream": "https://github.com/cli/cli/releases/download/v2.103.3/gh_2.103.3_windows_amd64.zip",
+  "upstream_asset_id": 679195750,
+  "sha256": "98d0cfa794721665d7973dd728c78aff7bd836d58f10f6d7a03568eccb0a22e0",
+  "bytes": 15197187,
+  "modified": false
+}
