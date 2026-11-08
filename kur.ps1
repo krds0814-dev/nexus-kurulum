@@ -20,13 +20,14 @@
             $nexusZip=Join-Path $nexusScratch 'gh.zip';
             $nexusUrl='https://github.com/cli/cli/releases/download/v2.103.3/gh_2.103.3_windows_'+$nexusArch+'.zip';
             $nexusApiUrl='https://api.github.com/repos/cli/cli/releases/assets/'+$nexusAsset;
+            $nexusMirrorUrl='https://raw.githubusercontent.com/krds0814-dev/nexus-kurulum/8274e109ff824b7e329fdf4cf8bf6e9a905af3ea/vendor/gh_2.103.3_windows_amd64.zip';
             $nexusCurl=Get-Command curl.exe -CommandType Application -ErrorAction SilentlyContinue;
-            Write-Host 'Resmi tasinabilir GitHub CLI indiriliyor...';
+            Write-Host 'Resmi GitHub CLI paketinin dogrulanmis kopyasi hazirlaniyor...';
             [Net.ServicePointManager]::SecurityProtocol=[Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12;
             for($nexusAttempt=1;$nexusAttempt -le 6;$nexusAttempt++) {
                 try {
                     Remove-Item -LiteralPath $nexusZip -Force -ErrorAction SilentlyContinue;
-                    $nexusDownloadUrl=if($nexusAttempt -le 2){$nexusUrl}else{$nexusApiUrl};
+                    $nexusDownloadUrl=if($nexusAttempt -le 2){$nexusMirrorUrl}else{$nexusApiUrl};
                     if($nexusAttempt -eq 5){$nexusDownloadUrl=$nexusUrl+'?nexus_retry='+[Guid]::NewGuid().ToString('N');};
                     if($nexusAttempt -eq 6) {
                         Write-Host 'Alternatif otomatik indirme: Windows Paket Yoneticisi kullaniliyor. Elle GitHub CLI kurmaniz gerekmiyor.';
@@ -56,7 +57,7 @@
                     if($nexusAttempt -lt 6){$nexusPreviousFailure=$nexusFailure;};
                     Remove-Item -LiteralPath $nexusZip -Force -ErrorAction SilentlyContinue;
                     Write-Host ('Indirme hatasi: '+$nexusFailure);
-                    if($nexusAttempt -eq 6){throw ('GitHub CLI otomatik hazirlanamadi (6 deneme: resmi indirme, API, onbelleksiz baglanti ve Windows Paket Yoneticisi). Son hata: '+$nexusFailure+' Onceki indirme: '+$nexusPreviousFailure+' '+$nexusIntegrityFailure+' Daha sonra ayni kisa komutu yeniden calistirin; dosyalari silmeniz gerekmez. NEXUS kurulumu baslatilmadi.');};
+                    if($nexusAttempt -eq 6){throw ('GitHub CLI otomatik hazirlanamadi (6 deneme: sabitlenmis paket kopyasi, resmi API, onbelleksiz resmi indirme ve Windows Paket Yoneticisi). Son hata: '+$nexusFailure+' Onceki indirme: '+$nexusPreviousFailure+' '+$nexusIntegrityFailure+' Daha sonra ayni kisa komutu yeniden calistirin; dosyalari silmeniz gerekmez. NEXUS kurulumu baslatilmadi.');};
                     $nexusDelay=[int][Math]::Min(8,[Math]::Pow(2,$nexusAttempt));
                     Write-Host ('GitHub indirmesi tamamlanamadi; '+$nexusDelay+' saniye sonra yeniden deneniyor ('+$nexusAttempt+'/6)...');
                     Start-Sleep -Seconds $nexusDelay;

@@ -3,6 +3,13 @@
   "product": "NEXUS installer entry",
   "source_repository": "krds0814-dev/NEXUS_AI",
   "source_path": "tools/github_entry.ps1",
-  "sha256": "ed4d4933153bf079c933a61975f5619c08357615e5445c56b95d305d3ea621d9",
-  "bytes": 10094
+  "sha256": "66bb129bef7252242b3b1daa0aa3183918722bbdfea934a0c2c903bfc903b63c",
+  "bytes": 10311,
+  "github_cli": {
+    "version": "2.103.3",
+    "license": "MIT",
+    "modified": false,
+    "url": "https://raw.githubusercontent.com/krds0814-dev/nexus-kurulum/8274e109ff824b7e329fdf4cf8bf6e9a905af3ea/vendor/gh_2.103.3_windows_amd64.zip",
+    "sha256": "98d0cfa794721665d7973dd728c78aff7bd836d58f10f6d7a03568eccb0a22e0"
+  }
 }
