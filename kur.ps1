@@ -23,29 +23,42 @@
             $nexusCurl=Get-Command curl.exe -CommandType Application -ErrorAction SilentlyContinue;
             Write-Host 'Resmi tasinabilir GitHub CLI indiriliyor...';
             [Net.ServicePointManager]::SecurityProtocol=[Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12;
-            for($nexusAttempt=1;$nexusAttempt -le 4;$nexusAttempt++) {
+            for($nexusAttempt=1;$nexusAttempt -le 6;$nexusAttempt++) {
                 try {
                     Remove-Item -LiteralPath $nexusZip -Force -ErrorAction SilentlyContinue;
                     $nexusDownloadUrl=if($nexusAttempt -le 2){$nexusUrl}else{$nexusApiUrl};
-                    if($nexusCurl -and ($nexusAttempt % 2 -eq 0)) {
+                    if($nexusAttempt -eq 5){$nexusDownloadUrl=$nexusUrl+'?nexus_retry='+[Guid]::NewGuid().ToString('N');};
+                    if($nexusAttempt -eq 6) {
+                        Write-Host 'Alternatif otomatik indirme: Windows Paket Yoneticisi kullaniliyor. Elle GitHub CLI kurmaniz gerekmiyor.';
+                        $nexusWinget=Get-Command winget.exe -CommandType Application -ErrorAction SilentlyContinue;
+                        if(-not $nexusWinget){throw 'Windows Paket Yoneticisi bu bilgisayarda bulunamadi.';};
+                        $nexusWingetDirectory=Join-Path $nexusScratch 'winget-download';
+                        New-Item -ItemType Directory -Path $nexusWingetDirectory -Force | Out-Null;
+                        & $nexusWinget.Source download --id GitHub.cli --exact --version 2.103.3 --source winget --architecture x64 --installer-type zip --download-directory $nexusWingetDirectory --skip-dependencies --accept-package-agreements --accept-source-agreements --disable-interactivity;
+                        if($LASTEXITCODE -ne 0){throw ('Windows Paket Yoneticisi indirme hatasi (kod '+$LASTEXITCODE+').');};
+                        $nexusWingetZips=@(Get-ChildItem -LiteralPath $nexusWingetDirectory -File -Filter '*.zip');
+                        if($nexusWingetZips.Count -ne 1){throw 'Windows Paket Yoneticisi beklenen tek ZIP dosyasini indirmedi.';};
+                        Copy-Item -LiteralPath $nexusWingetZips[0].FullName -Destination $nexusZip;
+                    } elseif($nexusCurl -and ($nexusAttempt % 2 -eq 0)) {
                         & $nexusCurl.Source --fail --location --silent --show-error --proto '=https' --proto-redir '=https' --connect-timeout 20 --max-time 120 --header 'Accept: application/octet-stream' --header 'User-Agent: NEXUS-Installer' --output $nexusZip $nexusDownloadUrl;
                         if($LASTEXITCODE -ne 0){throw ('curl indirme hatasi (kod '+$LASTEXITCODE+').');};
                     } else {
-                        Invoke-WebRequest -Uri $nexusDownloadUrl -OutFile $nexusZip -UseBasicParsing -Headers @{'Accept'='application/octet-stream';'User-Agent'='NEXUS-Installer'} -TimeoutSec 120 -ErrorAction Stop;
+                        Invoke-WebRequest -Uri $nexusDownloadUrl -OutFile $nexusZip -UseBasicParsing -Headers @{'Accept'='application/octet-stream';'User-Agent'='NEXUS-Installer';'Cache-Control'='no-cache'} -TimeoutSec 120 -ErrorAction Stop;
                     };
                     if(-not (Test-Path -LiteralPath $nexusZip) -or (Get-Item -LiteralPath $nexusZip).Length -eq 0){throw 'Indirme bos veya eksik.';};
                     $nexusHasher=[Security.Cryptography.SHA256]::Create();
                     $nexusStream=[IO.File]::OpenRead($nexusZip);
                     try {$nexusHash=[BitConverter]::ToString($nexusHasher.ComputeHash($nexusStream)).Replace('-','');} finally {$nexusStream.Dispose();$nexusHasher.Dispose();};
-                    if($nexusHash -ne $nexusExpected){throw 'GitHub CLI SHA-256 dogrulamasi basarisiz; dosya calistirilmadi.';};
+                    if($nexusHash -ne $nexusExpected){$nexusIntegrityFailure='GitHub CLI SHA-256 dogrulamasi basarisiz; dosya calistirilmadi.';throw $nexusIntegrityFailure;};
                     break;
                 } catch {
                     $nexusFailure=$_.Exception.Message;
+                    if($nexusAttempt -lt 6){$nexusPreviousFailure=$nexusFailure;};
                     Remove-Item -LiteralPath $nexusZip -Force -ErrorAction SilentlyContinue;
                     Write-Host ('Indirme hatasi: '+$nexusFailure);
-                    if($nexusAttempt -eq 4){throw ('GitHub CLI indirilemedi (4 deneme, resmi indirme ve API adresleri). Son hata: '+$nexusFailure+' Tarayicidan https://cli.github.com adresindeki resmi GitHub CLI kurucusunu kullanip PowerShell penceresini yeniden acabilirsiniz. NEXUS kurulumu baslatilmadi.');};
-                    $nexusDelay=[int][Math]::Pow(2,$nexusAttempt);
-                    Write-Host ('GitHub indirmesi tamamlanamadi; '+$nexusDelay+' saniye sonra yeniden deneniyor ('+$nexusAttempt+'/4)...');
+                    if($nexusAttempt -eq 6){throw ('GitHub CLI otomatik hazirlanamadi (6 deneme: resmi indirme, API, onbelleksiz baglanti ve Windows Paket Yoneticisi). Son hata: '+$nexusFailure+' Onceki indirme: '+$nexusPreviousFailure+' '+$nexusIntegrityFailure+' Daha sonra ayni kisa komutu yeniden calistirin; dosyalari silmeniz gerekmez. NEXUS kurulumu baslatilmadi.');};
+                    $nexusDelay=[int][Math]::Min(8,[Math]::Pow(2,$nexusAttempt));
+                    Write-Host ('GitHub indirmesi tamamlanamadi; '+$nexusDelay+' saniye sonra yeniden deneniyor ('+$nexusAttempt+'/6)...');
                     Start-Sleep -Seconds $nexusDelay;
                 };
             };

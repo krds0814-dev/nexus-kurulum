@@ -13,6 +13,10 @@ Parola, bot anahtarı ve kullanıcı ayarları bu depoda tutulmaz.
 Git veya Python'u önceden kurmak gerekmez. Betik doğrulanmış GitHub CLI'yi hazırlar,
 GitHub girişini ve Türkçe kurulum sihirbazını başlatır. Model veya video üretmez.
 Geçici bağlantı hatalarında yeniden deneme ve resmî alternatif indirme yolları kullanılır.
+Normal indirme başarısızsa önbelleksiz bağlantı, ardından varsa Windows Paket
+Yöneticisi ile otomatik ZIP indirmesi denenir. Sistem kurulumu yapılmaz; indirilen
+dosyanın sabit SHA-256 özeti ayrıca doğrulanır. Tüm yollar erişilemezse aynı kısa
+komutla daha sonra tekrar denenebilir; elle GitHub CLI kurulması istenmez.
 
 `bootstrap-manifest.json`, giriş betiğinin SHA-256 özetini ve kaynak bilgisini taşır.
 Uygulama kaynakları, hesaplar, modeller ve videolar bu depoda yayımlanmaz.
